@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automação Arrumação</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #121828;
+  --surface2: #1a2238;
+  --accent: #00d4aa;
+  --accent2: #7c5cfc;
+  --accent3: #ff6b6b;
+  --text: #e8eaf0;
+  --text-dim: #6b7394;
+  --gold: #ffd700;
+  --border: rgba(255,255,255,0.06);
+  --glow: 0 0 30px rgba(0,212,170,0.15);
+  --desk: #2a3352;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: 
+    radial-gradient(ellipse at 20% 0%, rgba(124,92,252,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(0,212,170,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  padding: 40px 0 10px;
+}
+
+header h1 {
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+header p {
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* Storage badge */
+.storage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.storage-badge.persistent {
+  background: rgba(0,212,170,0.1);
+  border: 1px solid rgba(0,212,170,0.2);
+  color: var(--accent);
+}
+
+.storage-badge.session {
+  background: rgba(255,215,0,0.1);
+  border: 1px solid rgba(255,215,0,0.2);
+  color: var(--gold);
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  header h1 { font-size: 2rem; }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0.6;
+}
+
+.panel-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-title .icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* ===== TOAST NOTIFICATIONS (replaces alert/confirm) ===== */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s forwards;
+  max-width: 340px;
+}
+
+.toast.error { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+.toast.success { background: linear-gradient(135deg, #00d4aa, #00b894); color: #0a0e1a; }
+.toast.info { background: linear-gradient(135deg, #7c5cfc, #6c5ce7); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(60px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(60px); }
+}
+
+/* ===== ROULETTE ===== */
+.roulette-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.name-input-area {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.name-input-area input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.name-input-area input:focus { border-color: var(--accent); }
+.name-input-area input::placeholder { color: var(--text-dim); }
+
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-add { background: var(--accent2); color: #fff; }
+.btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(124,92,252,0.4); }
+
+.btn-spin {
+  background: linear-gradient(135deg, var(--accent), #00b894);
+  color: #0a0e1a;
+  font-size: 1.1rem;
+  padding: 16px 40px;
+  margin-top: 20px;
+  width: 100%;
+}
+.btn-spin:hover { transform: translateY(-2px); box-shadow: 0 4px 25px rgba(0,212,170,0.4); }
+.btn-spin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-reset {
+  background: var(--accent3);
+  color: #fff;
+  margin-top: 10px;
+  width: 100%;
+  font-size: 0.85rem;
+  padding: 10px;
+  transition: all 0.3s;
+}
+.btn-reset:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,107,107,0.3); }
+
+.reset-area {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.reset-password-box {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+.reset-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--accent3);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.reset-input:focus { border-color: var(--accent3); box-shadow: 0 0 10px rgba(255,107,107,0.2); }
+
+.btn-reset-confirm {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent3);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-reset-cancel {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.members-list {
+  width: 100%;
+  margin: 10px 0;
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.member-tag .remove {
+  cursor: pointer;
+  color: var(--accent3);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+}
+.member-tag .remove:hover { opacity: 0.7; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* WHEEL */
+.wheel-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 10px auto;
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 0; height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 28px solid var(--gold);
+  filter: drop-shadow(0 2px 6px rgba(255,215,0,0.5));
+}
+
+canvas#wheel {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px var(--surface2), 0 0 0 8px var(--accent2), var(--glow);
+}
+
+.result-display { text-align: center; margin-top: 16px; min-height: 50px; }
+
+.result-display .result-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  animation: pulse 0.6s ease;
+}
+
+.result-display .result-seat {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* ===== DESK LAYOUTS ===== */
+.islands-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.island-label {
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.island-desk { margin: 0 auto; }
+
+.ilha1-desk {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 8px auto;
+  gap: 0;
+  max-width: 260px;
+}
+
+.ilha2-desk {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 8px auto;
+  gap: 0;
+  max-width: 380px;
+}
+
+.desk-divider {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  opacity: 0.35;
+  border-radius: 4px;
+  position: relative;
+}
+
+.desk-divider::after {
+  content: 'MESA';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.55rem;
+  font-family: 'Space Mono', monospace;
+  color: var(--text);
+  letter-spacing: 3px;
+  background: var(--surface);
+  padding: 2px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.seat-box {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 6px;
+  text-align: center;
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s ease;
+  background: var(--surface2);
+  margin: 5px;
+}
+
+.seat-box.occupied {
+  border-color: var(--accent);
+  background: rgba(0,212,170,0.06);
+  box-shadow: 0 0 15px rgba(0,212,170,0.1);
+}
+
+.seat-box.just-assigned { animation: seatGlow 1.2s ease; }
+
+@keyframes seatGlow {
+  0% { box-shadow: 0 0 0 rgba(0,212,170,0); transform: scale(1); }
+  40% { box-shadow: 0 0 40px rgba(0,212,170,0.5); transform: scale(1.06); }
+  100% { box-shadow: 0 0 15px rgba(0,212,170,0.1); transform: scale(1); }
+}
+
+.seat-number {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.seat-name { font-size: 0.85rem; font-weight: 600; color: var(--accent); word-break: break-word; }
+.seat-empty { font-size: 0.7rem; color: var(--text-dim); opacity: 0.5; font-style: italic; }
+
+.chair-icon { font-size: 0.65rem; color: var(--text-dim); opacity: 0.4; margin-top: 3px; }
+.seat-box.occupied .chair-icon { opacity: 0.8; color: var(--accent); }
+
+.status-bar {
+  text-align: center;
+  padding: 14px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+}
+.status-bar span { color: var(--accent); font-weight: 600; }
+
+/* HISTORY */
+.history-panel { grid-column: 1 / -1; }
+
+.history-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  animation: fadeIn 0.3s ease;
+}
+
+.history-seat-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--bg);
+  flex-shrink: 0;
+}
+
+.history-name { font-weight: 600; font-size: 0.9rem; }
+.history-time { font-size: 0.7rem; color: var(--text-dim); }
+
+.no-history {
+  color: var(--text-dim);
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  grid-column: 1/-1;
+}
+
+/* Export area */
+.export-section {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-export {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.btn-export:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="container">
+  <header>
+    <h1>Automação Arrumação</h1>
+    <p>Sistema de Atribuição de Lugares</p>
+    <div id="storageBadge"></div>
+  </header>
+
+  <div class="main-grid">
+    <!-- LEFT: Roulette -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="icon" style="background:rgba(124,92,252,0.15);color:var(--accent2);">&#127920;</div>
+        Roleta de Lugares
+      </div>
+      <div class="roulette-section">
+        <div class="name-input-area">
+          <input type="text" id="nameInput" placeholder="Escreva o nome do membro..." maxlength="30" />
+          <button class="btn btn-add" id="addBtn">+</button>
+        </div>
+        <div class="members-list" id="membersList"></div>
+
+        <div class="wheel-container">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheel" width="560" height="560"></canvas>
+        </div>
+
+        <div class="result-display" id="resultDisplay"></div>
+
+        <button class="btn btn-spin" id="spinBtn">&#9654; GIRAR ROLETA</button>
+        <div class="reset-area" id="resetArea">
+          <button class="btn btn-reset" id="resetBtn">&#128274; Reiniciar Tudo (Admin)</button>
+          <div class="reset-password-box" id="resetPasswordBox" style="display:none;">
+            <input type="password" id="resetPassword" placeholder="Senha de administrador..." class="reset-input" />
+            <button class="btn btn-reset-confirm" id="resetConfirmBtn">Confirmar</button>
+            <button class="btn btn-reset-cancel" id="resetCancelBtn">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Seating Map -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="icon" style="background:rgba(0,212,170,0.15);color:var(--accent);">&#129681;</div>
+        Mapa de Lugares
+      </div>
+      <div class="islands-container">
+        <!-- ILHA 1 -->
+        <div>
+          <div class="island-label">&#9472;&#9472;&#9472; Ilha 1 &#9472;&#9472;&#9472;</div>
+          <div class="ilha1-desk island-desk">
+            <div class="seat-box" id="seat-1">
+              <div class="chair-icon">&#9696;</div>
+              <div class="seat-number">#1</div>
+              <div class="seat-empty">vazio</div>
+            </div>
+            <div class="seat-box" id="seat-2">
+              <div class="chair-icon">&#9696;</div>
+              <div class="seat-number">#2</div>
+              <div class="seat-empty">vazio</div>
+            </div>
+            <div class="desk-divider"></div>
+            <div class="seat-box" id="seat-3">
+              <div class="seat-number">#3</div>
+              <div class="seat-empty">vazio</div>
+              <div class="chair-icon">&#9697;</div>
+            </div>
+            <div class="seat-box" id="seat-4">
+              <div class="seat-number">#4</div>
+              <div class="seat-empty">vazio</div>
+              <div class="chair-icon">&#9697;</div>
+            </div>
+          </div>
+        </div>
+        <!-- ILHA 2 -->
+        <div>
+          <div class="island-label">&#9472;&#9472;&#9472; Ilha 2 &#9472;&#9472;&#9472;</div>
+          <div class="ilha2-desk island-desk">
+            <div class="seat-box" id="seat-5">
+              <div class="chair-icon">&#9696;</div>
+              <div class="seat-number">#5</div>
+              <div class="seat-empty">vazio</div>
+            </div>
+            <div class="seat-box" id="seat-6">
+              <div class="chair-icon">&#9696;</div>
+              <div class="seat-number">#6</div>
+              <div class="seat-empty">vazio</div>
+            </div>
+            <div class="seat-box" id="seat-7">
+              <div class="chair-icon">&#9696;</div>
+              <div class="seat-number">#7</div>
+              <div class="seat-empty">vazio</div>
+            </div>
+            <div class="desk-divider"></div>
+            <div class="seat-box" id="seat-8">
+              <div class="seat-number">#8</div>
+              <div class="seat-empty">vazio</div>
+              <div class="chair-icon">&#9697;</div>
+            </div>
+            <div class="seat-box" id="seat-9">
+              <div class="seat-number">#9</div>
+              <div class="seat-empty">vazio</div>
+              <div class="chair-icon">&#9697;</div>
+            </div>
+            <div class="seat-box" id="seat-10">
+              <div class="seat-number">#10</div>
+              <div class="seat-empty">vazio</div>
+              <div class="chair-icon">&#9697;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="status-bar">Lugares ocupados: <span id="occupiedCount">0</span> / 10</div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="panel history-panel">
+      <div class="panel-title">
+        <div class="icon" style="background:rgba(255,215,0,0.15);color:var(--gold);">&#128203;</div>
+        Histórico de Atribuições
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="no-history">Nenhuma atribuição ainda...</div>
+      </div>
+      <div class="export-section">
+        <button class="btn-export" id="exportBtn">&#128190; Exportar Dados (JSON)</button>
+        <button class="btn-export" id="copyBtn">&#128203; Copiar Resumo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===== CONFIG =====
+  var STORAGE_KEY = 'automacao_arrumacao_data';
+  var RESERVED_SEAT = 8;
+  var RESERVED_NAME = 'josias';
+  var TOTAL_SEATS = 10;
+  var COLORS = [
+    '#7c5cfc','#00d4aa','#ff6b6b','#ffd700','#00b894',
+    '#e84393','#0984e3','#fdcb6e','#6c5ce7','#00cec9',
+    '#e17055','#a29bfe'
+  ];
+
+  // ===== STATE =====
+  var members = [];
+  var assignments = {};
+  var spinning = false;
+  var storageMode = 'memory'; // 'local' or 'memory'
+
+  // ===== STORAGE LAYER (localStorage with fallback to in-memory) =====
+  var memoryStore = {};
+
+  function storageAvailable() {
+    try {
+      var test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function storeSet(key, value) {
+    if (storageMode === 'local') {
+      try { localStorage.setItem(key, value); } catch(e) { memoryStore[key] = value; }
+    } else {
+      memoryStore[key] = value;
+    }
+  }
+
+  function storeGet(key) {
+    if (storageMode === 'local') {
+      try { return localStorage.getItem(key); } catch(e) { return memoryStore[key] || null; }
+    }
+    return memoryStore[key] || null;
+  }
+
+  function storeRemove(key) {
+    if (storageMode === 'local') {
+      try { localStorage.removeItem(key); } catch(e) { delete memoryStore[key]; }
+    } else {
+      delete memoryStore[key];
+    }
+  }
+
+  function initStorage() {
+    if (storageAvailable()) {
+      storageMode = 'local';
+    } else {
+      storageMode = 'memory';
+    }
+    var badge = document.getElementById('storageBadge');
+    if (storageMode === 'local') {
+      badge.innerHTML = '<span class="storage-badge persistent">&#9679; Dados persistentes (localStorage)</span>';
+    } else {
+      badge.innerHTML = '<span class="storage-badge session">&#9679; Sessão temporária — dados perdem-se ao fechar</span>';
+    }
+  }
+
+  // ===== TOAST NOTIFICATIONS (no alert/confirm needed) =====
+  function showToast(message, type) {
+    type = type || 'info';
+    var container = document.getElementById('toastContainer');
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 3000);
+  }
+
+  // ===== PERSISTENCE =====
+  function saveState() {
+    storeSet(STORAGE_KEY, JSON.stringify({ members: members, assignments: assignments }));
+  }
+
+  function loadState() {
+    var raw = storeGet(STORAGE_KEY);
+    if (raw) {
+      try {
+        var d = JSON.parse(raw);
+        members = d.members || [];
+        assignments = d.assignments || {};
+      } catch(e) {
+        members = [];
+        assignments = {};
+      }
+    }
+  }
+
+  // ===== MEMBERS =====
+  function addMember() {
+    var input = document.getElementById('nameInput');
+    var name = input.value.trim();
+    if (!name) return;
+
+    // Check duplicates in waiting list
+    var isDuplicate = members.some(function(m) { return m.toLowerCase() === name.toLowerCase(); });
+    if (isDuplicate) {
+      showToast('Este nome já foi adicionado!', 'error');
+      return;
+    }
+
+    // Check duplicates in assignments
+    for (var s in assignments) {
+      if (assignments[s].name.toLowerCase() === name.toLowerCase()) {
+        showToast('Este membro já tem um lugar atribuído!', 'error');
+        return;
+      }
+    }
+
+    // SECRET: Josias goes directly to seat 8
+    if (name.toLowerCase() === RESERVED_NAME && !assignments[RESERVED_SEAT]) {
+      var t = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      assignments[RESERVED_SEAT] = { name: name, time: t };
+      input.value = '';
+      input.focus();
+      saveState();
+      renderMembers();
+      drawWheel();
+      renderSeats(RESERVED_SEAT);
+      renderHistory();
+      document.getElementById('resultDisplay').innerHTML =
+        '<div class="result-name">' + name + '</div>' +
+        '<div class="result-seat">&rarr; Lugar #' + RESERVED_SEAT + ' (Ilha 2)</div>';
+      showToast(name + ' atribuído ao lugar #' + RESERVED_SEAT, 'success');
+      return;
+    }
+
+    members.push(name);
+    input.value = '';
+    input.focus();
+    saveState();
+    renderMembers();
+    drawWheel();
+    showToast(name + ' adicionado à roleta', 'success');
+  }
+
+  function removeMember(idx) {
+    var removed = members[idx];
+    members.splice(idx, 1);
+    saveState();
+    renderMembers();
+    drawWheel();
+    showToast(removed + ' removido', 'info');
+  }
+
+  // Make removeMember accessible from inline onclick
+  window.removeMember = removeMember;
+
+  function renderMembers() {
+    var list = document.getElementById('membersList');
+    if (members.length === 0) {
+      list.innerHTML = '<span style="color:var(--text-dim);font-style:italic;font-size:0.85rem;">Adicione membros para girar a roleta</span>';
+      return;
+    }
+    list.innerHTML = members.map(function(m, i) {
+      return '<div class="member-tag"><span>' + m + '</span><span class="remove" onclick="removeMember(' + i + ')">×</span></div>';
+    }).join('');
+  }
+
+  // ===== WHEEL =====
+  function drawWheel() {
+    var canvas = document.getElementById('wheel');
+    var ctx = canvas.getContext('2d');
+    var cx = 280, cy = 280, r = 270;
+    ctx.clearRect(0, 0, 560, 560);
+
+    if (members.length === 0) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a2238';
+      ctx.fill();
+      ctx.strokeStyle = '#2d3555';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#6b7394';
+      ctx.font = '600 22px Outfit';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Adicione nomes', cx, cy - 12);
+      ctx.fillText('para começar', cx, cy + 16);
+      return;
+    }
+
+    var n = members.length;
+    var arc = (Math.PI * 2) / n;
+    for (var i = 0; i < n; i++) {
+      var sa = i * arc - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, sa, sa + arc);
+      ctx.closePath();
+      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(10,14,26,0.4)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(sa + arc / 2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#fff';
+      var fontSize = n > 8 ? 14 : n > 5 ? 16 : 20;
+      ctx.font = '700 ' + fontSize + 'px Outfit';
+      ctx.textBaseline = 'middle';
+      var nm = members[i].length > 10 ? members[i].substring(0, 9) + '\u2026' : members[i];
+      ctx.fillText(nm, r - 20, 0);
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0e1a';
+    ctx.fill();
+    ctx.strokeStyle = '#7c5cfc';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // ===== SPIN =====
+  function getAvailableSeats() {
+    var a = [];
+    for (var i = 1; i <= TOTAL_SEATS; i++) {
+      if (!assignments[i]) a.push(i);
+    }
+    return a;
+  }
+
+  function spinWheel() {
+    if (spinning || members.length === 0) return;
+    var availableSeats = getAvailableSeats();
+    if (availableSeats.length === 0) {
+      showToast('Todos os lugares estão ocupados!', 'error');
+      return;
+    }
+
+    spinning = true;
+    document.getElementById('spinBtn').disabled = true;
+    document.getElementById('resultDisplay').innerHTML = '';
+
+    var n = members.length;
+    var winnerIdx = Math.floor(Math.random() * n);
+    var winnerName = members[winnerIdx];
+
+    // Determine seat — keep seat 8 reserved for Josias if he hasn't been placed
+    var assignedSeat;
+    if (winnerName.toLowerCase() === RESERVED_NAME && !assignments[RESERVED_SEAT]) {
+      assignedSeat = RESERVED_SEAT;
+    } else {
+      var filtered = availableSeats.filter(function(s) {
+        if (s === RESERVED_SEAT) {
+          var jInMembers = members.some(function(m) { return m.toLowerCase() === RESERVED_NAME; });
+          var jAssigned = Object.values(assignments).some(function(a) { return a.name.toLowerCase() === RESERVED_NAME; });
+          if (jInMembers && !jAssigned && winnerName.toLowerCase() !== RESERVED_NAME) return false;
+        }
+        return true;
+      });
+      var pool = filtered.length > 0 ? filtered : availableSeats;
+      assignedSeat = pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    var arc = (Math.PI * 2) / n;
+    var targetAngle = -(winnerIdx * arc + arc / 2) + Math.PI * 2 * (5 + Math.random() * 3);
+    var duration = 4000;
+    var startTime = performance.now();
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function animate(now) {
+      var p = Math.min((now - startTime) / duration, 1);
+      var angle = easeOut(p) * targetAngle;
+      var canvas = document.getElementById('wheel');
+      var ctx = canvas.getContext('2d');
+      var cx = 280, cy = 280, r = 270;
+      ctx.clearRect(0, 0, 560, 560);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.translate(-cx, -cy);
+
+      for (var i = 0; i < n; i++) {
+        var sa = i * arc - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, sa, sa + arc);
+        ctx.closePath();
+        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(10,14,26,0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(sa + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff';
+        var fontSize = n > 8 ? 14 : n > 5 ? 16 : 20;
+        ctx.font = '700 ' + fontSize + 'px Outfit';
+        ctx.textBaseline = 'middle';
+        var nm = members[i].length > 10 ? members[i].substring(0, 9) + '\u2026' : members[i];
+        ctx.fillText(nm, r - 20, 0);
+        ctx.restore();
+      }
+      ctx.beginPath();
+      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+      ctx.fillStyle = '#0a0e1a';
+      ctx.fill();
+      ctx.strokeStyle = '#7c5cfc';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+
+      if (p < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        finishSpin(winnerName, assignedSeat);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function finishSpin(name, seat) {
+    spinning = false;
+    document.getElementById('spinBtn').disabled = false;
+    var t = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    assignments[seat] = { name: name, time: t };
+    members = members.filter(function(m) { return m.toLowerCase() !== name.toLowerCase(); });
+    saveState();
+
+    document.getElementById('resultDisplay').innerHTML =
+      '<div class="result-name">' + name + '</div>' +
+      '<div class="result-seat">&rarr; Lugar #' + seat + ' ' + (seat <= 4 ? '(Ilha 1)' : '(Ilha 2)') + '</div>';
+
+    showToast(name + ' vai para o lugar #' + seat + '!', 'success');
+    renderMembers();
+    drawWheel();
+    renderSeats(seat);
+    renderHistory();
+  }
+
+  // ===== SEATS =====
+  function renderSeats(justAssigned) {
+    var topRow = [1, 2, 5, 6, 7];
+    for (var i = 1; i <= TOTAL_SEATS; i++) {
+      var el = document.getElementById('seat-' + i);
+      if (!el) continue;
+      var a = assignments[i];
+      var isTop = topRow.indexOf(i) !== -1;
+      if (a) {
+        el.className = 'seat-box occupied' + (justAssigned === i ? ' just-assigned' : '');
+        el.innerHTML = isTop
+          ? '<div class="chair-icon">&#9696;</div><div class="seat-number">#' + i + '</div><div class="seat-name">' + a.name + '</div>'
+          : '<div class="seat-number">#' + i + '</div><div class="seat-name">' + a.name + '</div><div class="chair-icon">&#9697;</div>';
+      } else {
+        el.className = 'seat-box';
+        el.innerHTML = isTop
+          ? '<div class="chair-icon">&#9696;</div><div class="seat-number">#' + i + '</div><div class="seat-empty">vazio</div>'
+          : '<div class="seat-number">#' + i + '</div><div class="seat-empty">vazio</div><div class="chair-icon">&#9697;</div>';
+      }
+    }
+    document.getElementById('occupiedCount').textContent = Object.keys(assignments).length;
+  }
+
+  // ===== HISTORY =====
+  function renderHistory() {
+    var list = document.getElementById('historyList');
+    var entries = Object.entries(assignments).sort(function(a, b) { return a[0] - b[0]; });
+    if (entries.length === 0) {
+      list.innerHTML = '<div class="no-history">Nenhuma atribuição ainda...</div>';
+      return;
+    }
+    list.innerHTML = entries.map(function(entry) {
+      var seat = entry[0];
+      var data = entry[1];
+      return '<div class="history-item">' +
+        '<div class="history-seat-num">' + seat + '</div>' +
+        '<div><div class="history-name">' + data.name + '</div>' +
+        '<div class="history-time">' + (seat <= 4 ? 'Ilha 1' : 'Ilha 2') + ' &middot; ' + (data.time || '') + '</div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  // ===== RESET (password protected) =====
+  var ADMIN_PASSWORD = 'admin2026'; // ← MUDE ESTA SENHA
+
+  function resetAll() {
+    var box = document.getElementById('resetPasswordBox');
+    var btn = document.getElementById('resetBtn');
+    box.style.display = 'flex';
+    btn.style.display = 'none';
+    document.getElementById('resetPassword').value = '';
+    document.getElementById('resetPassword').focus();
+  }
+
+  function cancelReset() {
+    document.getElementById('resetPasswordBox').style.display = 'none';
+    document.getElementById('resetBtn').style.display = '';
+  }
+
+  function confirmReset() {
+    var pwd = document.getElementById('resetPassword').value;
+    if (pwd === ADMIN_PASSWORD) {
+      members = [];
+      assignments = {};
+      storeRemove(STORAGE_KEY);
+      saveState();
+      renderMembers();
+      drawWheel();
+      renderSeats();
+      renderHistory();
+      document.getElementById('resultDisplay').innerHTML = '';
+      cancelReset();
+      showToast('Dados reiniciados com sucesso!', 'success');
+    } else {
+      showToast('Senha incorrecta — apenas o administrador pode reiniciar', 'error');
+      document.getElementById('resetPassword').value = '';
+      document.getElementById('resetPassword').focus();
+    }
+  }
+
+  // ===== EXPORT =====
+  function exportJSON() {
+    var data = JSON.stringify({ assignments: assignments, members: members, exportDate: new Date().toISOString() }, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'arrumacao_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Dados exportados!', 'success');
+  }
+
+  function copySummary() {
+    var entries = Object.entries(assignments).sort(function(a, b) { return a[0] - b[0]; });
+    if (entries.length === 0) {
+      showToast('Nenhuma atribuição para copiar', 'error');
+      return;
+    }
+    var text = 'AUTOMAÇÃO ARRUMAÇÃO - Resumo\n' + '='.repeat(35) + '\n\n';
+    text += 'ILHA 1:\n';
+    entries.forEach(function(entry) {
+      if (entry[0] <= 4) text += '  Lugar #' + entry[0] + ': ' + entry[1].name + '\n';
+    });
+    text += '\nILHA 2:\n';
+    entries.forEach(function(entry) {
+      if (entry[0] > 4) text += '  Lugar #' + entry[0] + ': ' + entry[1].name + '\n';
+    });
+    text += '\nGerado em: ' + new Date().toLocaleString('pt-BR');
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Resumo copiado!', 'success');
+      }).catch(function() {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showToast('Resumo copiado!', 'success');
+    } catch(e) {
+      showToast('Não foi possível copiar — tente manualmente', 'error');
+    }
+    document.body.removeChild(ta);
+  }
+
+  // ===== EVENT LISTENERS (no inline onclick for SharePoint CSP compatibility) =====
+  document.getElementById('addBtn').addEventListener('click', addMember);
+  document.getElementById('spinBtn').addEventListener('click', spinWheel);
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+  document.getElementById('resetConfirmBtn').addEventListener('click', confirmReset);
+  document.getElementById('resetCancelBtn').addEventListener('click', cancelReset);
+  document.getElementById('resetPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') confirmReset();
+    if (e.key === 'Escape') cancelReset();
+  });
+  document.getElementById('exportBtn').addEventListener('click', exportJSON);
+  document.getElementById('copyBtn').addEventListener('click', copySummary);
+  document.getElementById('nameInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addMember();
+  });
+
+  // ===== INIT =====
+  initStorage();
+  loadState();
+  renderMembers();
+  drawWheel();
+  renderSeats();
+  renderHistory();
+
+})();
+</script>
+
+</body>
+</html>
